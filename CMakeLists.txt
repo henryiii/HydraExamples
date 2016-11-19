@@ -10,7 +10,7 @@ set(HYDRA_ROOT "../Hydra")
 
 find_package(Hydra REQUIRED)
 
-HydraFind()
+HydraSetup()
 
 find_package(ROOT)
 
