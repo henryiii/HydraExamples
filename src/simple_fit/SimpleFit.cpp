@@ -19,12 +19,6 @@
  *
  *---------------------------------------------------------------------------*/
 
-/*
- * HydraFitExample.cu
- *
- *  Created on: Jun 21, 2016
- *      Author: Antonio Augusto Alves Junior
- */
 
 #include <iostream>
 #include <assert.h>
@@ -85,105 +79,20 @@ using namespace ROOT::Minuit2;
 using namespace hydra;
 using namespace examples;
 
-/**
- * @file
- * @example HydraFitExample.cu
- * @brief HydraFitExample take parameters from the command line, fill a range with random numbers sampled from
- * the model and perform a extended likelihood fit in parallel using the OpenMP backend.
- * @param -c (--combined-minimizer):  Use Migrad + Simplex for minimization
- * @param -i=<double> (--max-iterations=<double>) : Maximum number of iterations for migrad and minimize call.
- * @param -t=<double> (--tolerance=<double>) : Tolerance parameter for migrad and minimize call.
- * @param -n=<long> (--number-of-events=<long>) (required):  Number of events for each component.
- *
- * Usage:
- * ./Hydra_Example_NVCC_DEVICE_CUDA_HOST_OMP_Fit  [-c] [-i=<double>]
- *                                      [-t=<double>] -n=<long> [--]
- *                                      [--version] [-h]
- *
- * For example, the command below:
- * ```
- * ./Hydra_Example_NVCC_DEVICE_CUDA_HOST_OMP_Fit -n=1000000
- * ```
- * will print some stuff to standard output and produce the plot:
- *
- * @image html Fit_CUDA.png
- */
+GInt_t main(int argv, char** argc) {
 
+	size_t  nentries           = 1e6;
+	size_t  iterations         = 50000;
+	GReal_t tolerance          = 1.0;
+	GBool_t use_comb_minimizer = false;
 
-/**
- * @file
- * @brief HydraFitExample take parameters from the command line, fill a range with random numbers sampled from
- * the model and perform a extended likelihood fit in parallel using the OpenMP backend.
- * @param -c (--combined-minimizer):  Use Migrad + Simplex for minimization
- * @param -i=<double> (--max-iterations=<double>) : Maximum number of iterations for migrad and minimize call.
- * @param -t=<double> (--tolerance=<double>) : Tolerance parameter for migrad and minimize call.
- * @param -n=<long> (--number-of-events=<long>) (required):  Number of events for each component.
- *
- * Usage:
- * ./Hydra_Example_NVCC_DEVICE_CUDA_HOST_OMP_Fit  [-c] [-i=<double>]
- *                                      [-t=<double>] -n=<long> [--]
- *                                      [--version] [-h]
- *
- * For example, the command below:
- * ```
- * ./Hydra_Example_NVCC_DEVICE_CUDA_HOST_OMP_Fit -n=1000000
- * ```
- * will print some stuff to standard output and produce the plot:
- *
- * @image html Fit_CUDA.png
- */
-GInt_t main(int argv, char** argc)
-{
-
-	size_t  nentries           = 0;
-	size_t  iterations         = 0;
-	GReal_t tolerance          = 0;
-	GBool_t use_comb_minimizer = 0;
-
-	try {
-
-		TCLAP::CmdLine cmd("Command line arguments for HydraRandomExample", '=');
-
-		TCLAP::ValueArg<size_t> NEventsArg("n", "number-of-events",
-				"Number of events for each component.",
-				true, 1e6, "long int");
-		cmd.add(NEventsArg);
-
-		TCLAP::ValueArg<GReal_t> ToleranceArg("t", "tolerance",
-				"Tolerance parameter for migrad and minimize call.",
-				false, 1.0, "double");
-		cmd.add(ToleranceArg);
-
-		TCLAP::ValueArg<size_t> IterationsArg("i", "max-iterations",
-				"Maximum number of iterations for migrad and minimize call.",
-				false, 50000, "long int");
-		cmd.add(IterationsArg);
-
-		TCLAP::SwitchArg MinimizeArg("c","combined-minimizer",
-				"Use Migrad + Simplex for minimization", false);
-
-		cmd.add(MinimizeArg);
-		// Parse the argv array.
-		cmd.parse(argv, argc);
-
-		// Get the value parsed by each arg.
-		nentries   = NEventsArg.getValue();
-		iterations = IterationsArg.getValue();
-		tolerance  = ToleranceArg.getValue();
-		use_comb_minimizer = MinimizeArg.getValue();
-
-	}
-	catch (TCLAP::ArgException &e)
-	{
-		std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
-	}
 
 	//Print::SetLevel(0);
 	ROOT::Minuit2::MnPrint::SetLevel(3);
 	//----------------------------------------------
 
 	//Generator with current time count as seed.
-	size_t seed = 0;//std::chrono::system_clock::now().time_since_epoch().count();
+	size_t seed = 0; //std::chrono::system_clock::now().time_since_epoch().count();
 	Random<thrust::random::default_random_engine> Generator( seed  );
 
 
