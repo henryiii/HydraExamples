@@ -28,9 +28,6 @@
 #include <array>
 #include <chrono>
 
-//command line arguments
-#include <tclap/CmdLine.h>
-
 //this lib
 #include <hydra/Types.h>
 #include <hydra/Vector4R.h>
