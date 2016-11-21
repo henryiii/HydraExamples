@@ -44,18 +44,9 @@
 #include <hydra/Pdf.h>
 #include <hydra/AddPdf.h>
 
-#include "Minuit2/FunctionMinimum.h"
-#include "Minuit2/MnUserParameterState.h"
-#include "Minuit2/MnPrint.h"
 #include "Minuit2/MnMigrad.h"
 #include "Minuit2/MnMinimize.h"
-#include "Minuit2/MnMinos.h"
-#include "Minuit2/MnContours.h"
-#include "Minuit2/CombinedMinimizer.h"
-#include "Minuit2/MnPlot.h"
-#include "Minuit2/MinosError.h"
-#include "Minuit2/ContoursError.h"
-#include "Minuit2/VariableMetricMinimizer.h"
+
 //root
 #include <TROOT.h>
 #include <TH1D.h>
