@@ -91,8 +91,6 @@ public:
         T exponent = ( -0.5 / (width_zero2) * log_val * log_val) - ( width_zero2 * 0.5 );
         return exp(exponent);
 	}
-
 };
-
 }
 }

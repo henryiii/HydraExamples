@@ -4,13 +4,6 @@
 # This was buggy until a recent version of CMake
 find_package(Threads)
 
-HydraAddExecutable(PhSp PhSp.cpp)
-if(ROOT_FOUND)
-    # All the targets, cuda, omp, and tbb, use this interface
-    target_link_libraries(PhSp INTERFACE ${ROOT_LIBRARIES} Threads::Threads)
-    target_include_directories(PhSp INTERFACE ${ROOT_INCLUDE_DIR})
-    target_compile_definitions(PhSp INTERFACE FOUND_ROOT)
-endif()
-
+add_subdirectory(phsp)
 add_subdirectory(simple_fit)
 add_subdirectory(novo_fit)

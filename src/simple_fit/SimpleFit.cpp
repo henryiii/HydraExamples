@@ -59,13 +59,13 @@
 #include <TString.h>
 #include <TStyle.h>
 
-#include <src/Gauss.h>
-#include <src/Exp.h>
+#include <pdfs/Gauss.h>
+#include <pdfs/Exp.h>
 
 using namespace std;
 using namespace ROOT::Minuit2;
 using namespace hydra;
-using namespace examples;
+using namespace hydra::pdfs;
 
 GInt_t main(int argv, char** argc) {
 

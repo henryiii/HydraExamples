@@ -14,7 +14,6 @@ HydraSetup()
 
 find_package(ROOT)
 
+include_directories(include)
 add_subdirectory(src)
-
-
 

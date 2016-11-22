@@ -4,19 +4,17 @@
  *  Created on: 05/09/2016
  *      Author: augalves
  */
-
-#ifndef EXP_H_
-#define EXP_H_
+#pragma ONCE
 
 #include <hydra/Function.h>
 #include <hydra/Types.h>
 #include <hydra/Parameter.h>
 
-using namespace hydra;
+namespace hydra {
 
-namespace examples {
-struct Exp:public BaseFunctor<Exp, GReal_t, 1>
-{
+namespace pdfs {
+
+struct Exp:public BaseFunctor<Exp, GReal_t, 1> {
 
 	Exp(Parameter const& tau, GUInt_t position=0 ):
 		BaseFunctor<Exp,GReal_t,1>(),
@@ -52,9 +50,6 @@ struct Exp:public BaseFunctor<Exp, GReal_t, 1>
 	inline GReal_t Evaluate(T* x, T* p=0)
 	{
 		//printf(" Exp : fM %f fS %f\n", fM(),  fS());
-
-
-
 		return exp(x[fPosition]*fTau);
 
 	}
@@ -63,8 +58,7 @@ struct Exp:public BaseFunctor<Exp, GReal_t, 1>
 	Parameter fTau;
 };
 
-struct InvExp
-{
+struct InvExp {
 
 	InvExp(GReal_t const& tau, GReal_t const& x0, GUInt_t position=0 ):
 		fPosition(position),
@@ -112,5 +106,4 @@ struct InvExp
 
 };
 }
-
-#endif /* EXP_H_ */
+}

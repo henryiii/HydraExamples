@@ -25,8 +25,8 @@
 
 #include <thrust/transform.h>
 
-#include "Minuit2/MnMigrad.h"
-#include "Minuit2/MnMinimize.h"
+#include <Minuit2/MnMigrad.h>
+#include <Minuit2/MnMinimize.h>
 
 //root
 #include <TROOT.h>
@@ -40,8 +40,8 @@
 #include <TString.h>
 #include <TStyle.h>
 
-#include <Gauss.h>
-#include <Novosibirsk.h>
+#include "pdfs/Gauss.h"
+#include "pdfs/Novosibirsk.h"
 
 using namespace std;
 using namespace ROOT::Minuit2;
@@ -74,19 +74,17 @@ GInt_t main(int argv, char** argc) {
 	std::array<GReal_t, 1>  min   ={ -10};
 	std::array<GReal_t, 1>  max   ={ 1};
 
-	//------------------------------------
-	//parameters names
-	std::string Mean("Mean");
-	std::string Sigma("Sigma");
-	std::string Tail("Tail");
+    // Must be declared here
+    std::string Mean = "Mean";
+    std::string Sigma = "Sigma";
+    std::string Tail = "Tail";
 
 	//fit paremeters
 	//----------------------------------------------------------------------
-
-	// 1) using named parameter idiom
-	Parameter  mean_p  = Parameter::Create().Name("Mean").Value(.4) .Error(0.001).Limits(-10., 10.);
-	Parameter  sigma_p = Parameter::Create().Name("Sigma").Value(.6).Error(0.001).Limits(0., 1.);
-	Parameter  tail_p  = Parameter::Create().Name("Tail").Value(1.1).Error(0.001).Limits(0., 3.);
+	// using named parameter idiom
+	Parameter  mean_p  = Parameter::Create().Name(Mean).Value(.4) .Error(0.001).Limits(-10., 10.);
+	Parameter  sigma_p = Parameter::Create().Name(Sigma).Value(.6).Error(0.001).Limits(0., 1.);
+	Parameter  tail_p  = Parameter::Create().Name(Tail).Value(1.1).Error(0.001).Limits(0., 3.);
 
 	//----------------------------------------------------------------------
     // registry the parameters
