@@ -13,3 +13,4 @@ if(ROOT_FOUND)
 endif()
 
 add_subdirectory(simple_fit)
+add_subdirectory(novo_fit)
