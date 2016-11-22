@@ -138,7 +138,7 @@ GInt_t main(int argv, char** argc) {
 	//get data from device and fill histogram
 	PointVector<host> data_h(data_d);
 
-	TH1D hist_novo("novo", "", 1000, min[0], max[0]);
+	TH1D hist_novo("novo", "", 100, min[0], max[0]);
 
 	for(auto point: data_h )
 		hist_novo.Fill(point.GetCoordinate(0));
@@ -156,10 +156,10 @@ GInt_t main(int argv, char** argc) {
 	MnStrategy strategy(2);
 
 	// create Migrad minimizer
-	MnMigrad migrad(modelFCN, upar.GetState() ,  strategy);
+	MnMigrad migrad(modelFCN, upar.GetState(), strategy);
 
 	// create Minimize minimizer
-	MnMinimize minimize(modelFCN,upar.GetState() ,  strategy);
+	MnMinimize minimize(modelFCN,upar.GetState(), strategy);
 	FunctionMinimum *minimum=0;
 
 	// ... Minimize and profile the time
