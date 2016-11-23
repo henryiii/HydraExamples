@@ -19,6 +19,7 @@ if(ROOT_FOUND)
     target_link_libraries(Root INTERFACE ${root_libs} Threads::Threads)
     target_include_directories(Root INTERFACE ${ROOT_INCLUDE_DIR})
     target_compile_definitions(Root INTERFACE FOUND_ROOT)
+    include_directories(${ROOT_INCLUDE_DIR})
 endif()
 
 add_subdirectory(phsp)
