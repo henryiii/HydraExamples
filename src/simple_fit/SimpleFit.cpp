@@ -59,8 +59,8 @@
 #include <TString.h>
 #include <TStyle.h>
 
-#include <pdfs/Gauss.h>
-#include <pdfs/Exp.h>
+#include <PDFs/Gauss.h>
+#include <PDFs/Exp.h>
 
 using namespace std;
 using namespace ROOT::Minuit2;

@@ -8,7 +8,6 @@
 # HYDRA_THRUST_DIR       - where to find the variadic thrust
 # HYDRA_FOUND            - True if HYDRA is found
 # HYDRA_CXX_FLAGS        - Flags for building on your current system
-# HydraSetup             - Macro to find packages and prepare Hydra
 # HydraAddExecutable     - Macro to build Hydra packges
 #
 # HydraAddExecutable(MyProg prog.cpp) will add a MyProg master target and
@@ -60,7 +59,10 @@ find_package_handle_standard_args (HYDRA "HYDRA (http://github.com/multithreadco
 
 ######### Preparing basic info ##########
 
-set(HYDRA_GENERAL_FLAGS "-DTHRUST_VARIADIC_TUPLE --std=c++11 -fPIC") # -Wl,--no-undefined,--no-allow-shlib-undefined")
+set (CMAKE_CXX_STANDARD 11)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(HYDRA_GENERAL_FLAGS "-DTHRUST_VARIADIC_TUPLE") # -Wl,--no-undefined,--no-allow-shlib-undefined")
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(HYDRA_CXX_FLAGS ${HYDRA_CXX_FLAGS} "${HYDRA_GENERAL_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0 -march=native -O3")
@@ -93,7 +95,7 @@ if(CUDA_FOUND)
     --expt-relaxed-constexpr; -ftemplate-backtrace-limit=0;
     --expt-extended-lambda; --relocatable-device-code=false;
     --generate-line-info; -Xptxas -fmad=true; -Xptxas -dlcm=cg;
-    -Xptxas --opt-level=4 )
+    -Xptxas --opt-level=4)
     
     include(${HYDRA_CMAKE_MODULE_DIR}/FindCudaArch.cmake)
     
@@ -106,7 +108,7 @@ if(CUDA_FOUND)
     list(APPEND CUDA_NVCC_FLAGS " -D_MWAITXINTRIN_H_INCLUDED ")
     endif()
     
-    set(HYDRA_CUDA_OPTIONS -Xcompiler ${OpenMP_CXX_FLAGS} -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA  -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_OMP -lgomp -I${HYDRA_THRUST_DIR})
+    set(HYDRA_CUDA_OPTIONS -DTHRUST_VARIADIC_TUPLE -Xcompiler ${OpenMP_CXX_FLAGS} -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA  -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_OMP -lgomp -I${HYDRA_THRUST_DIR})
 endif()
 
 macro(HydraAddCuda NAMEEXE SOURCES)
@@ -118,9 +120,11 @@ macro(HydraAddCuda NAMEEXE SOURCES)
         OPTIONS ${HYDRA_CUDA_OPTIONS} )
 
     get_property(the_include_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-    string(REPLACE ${CUDA_INCLUDE_DIRS} "" new_include_dirs ${the_include_dirs})
-    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES ${new_include_dirs})
+    list(REMOVE_ITEM the_include_dirs "${CUDA_INCLUDE_DIRS}")
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES ${the_include_dirs})
   
+    set_target_properties(${NAMEEXE} PROPERTIES 
+        LINK_FLAGS "${OpenMP_CXX_FLAGS}")
     target_link_libraries(${NAMEEXE} ${CUDA_LIBRARIES})
 endmacro()
 

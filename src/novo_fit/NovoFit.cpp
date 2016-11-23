@@ -40,8 +40,8 @@
 #include <TString.h>
 #include <TStyle.h>
 
-#include "pdfs/Gauss.h"
-#include "pdfs/Novosibirsk.h"
+#include "PDFs/Gauss.h"
+#include "PDFs/Novosibirsk.h"
 
 using namespace std;
 using namespace ROOT::Minuit2;
