@@ -58,7 +58,6 @@ find_package_handle_standard_args (HYDRA "HYDRA (http://github.com/multithreadco
 #  set (HYDRA_INCLUDE_DIR ${HYDRA_INCLUDE_PATH})
 #endif (HYDRA_FOUND)
 
-
 ######### Preparing basic info ##########
 
 set(HYDRA_GENERAL_FLAGS "-DTHRUST_VARIADIC_TUPLE --std=c++11 -fPIC") # -Wl,--no-undefined,--no-allow-shlib-undefined")
@@ -73,51 +72,56 @@ else()
     set(HYDRA_CXX_FLAGS "${HYDRA_GENERAL_FLAGS} -O3")
 endif()
 
-macro(HydraSetup)
-    message(STATUS "HydraSetup: Module directory add and find platforms")
-    if(HYDRA_CMAKE_MODULE_DIR)
-        list (FIND ${CMAKE_MODULE_PATH} ${HYDRA_CMAKE_MODULE_DIR} _index)
-        if (${_index} EQUAL -1)
-            set(CMAKE_MODULE_PATH ${HYDRA_CMAKE_MODULE_DIR} ${CMAKE_MODULE_PATH})
-        endif()
-    endif()
+message(STATUS "HydraSetup: Module directory add and find platforms")
 
-    find_package(CUDA 8.0)
-    find_package(TBB)
-    find_package(OpenMP)
-endmacro(HydraSetup)
+if(HYDRA_CMAKE_MODULE_DIR)
+list (FIND ${CMAKE_MODULE_PATH} ${HYDRA_CMAKE_MODULE_DIR} _index)
+if (${_index} EQUAL -1)
+    set(CMAKE_MODULE_PATH ${HYDRA_CMAKE_MODULE_DIR} ${CMAKE_MODULE_PATH})
+endif()
+endif()
+
+find_package(CUDA 8.0)
+find_package(TBB)
+find_package(OpenMP)
 
 
 if(CUDA_FOUND)
-    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} -std=c++11;
-        -I${HYDRA_INCLUDE_DIR} --cudart; static; -O4;
-        --expt-relaxed-constexpr; -ftemplate-backtrace-limit=0;
-        --expt-extended-lambda;--relocatable-device-code=false;
-        --generate-line-info; -Xptxas -fmad=true ;-Xptxas -dlcm=cg;
-        -Xptxas --opt-level=4 )
-
-    set(CUDA_SEPARABLE_COMPILATION OFF)
-    set(CUDA_VERBOSE_BUILD ON)
+    set(CUDA_NVCC_FLAGS  -std=c++11;
+    --cudart; static; -O4;
+    ${CUDA_NVCC_FLAGS};
+    --expt-relaxed-constexpr; -ftemplate-backtrace-limit=0;
+    --expt-extended-lambda; --relocatable-device-code=false;
+    --generate-line-info; -Xptxas -fmad=true; -Xptxas -dlcm=cg;
+    -Xptxas --opt-level=4 )
     
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindCudaArch.cmake)
-
+    include(${HYDRA_CMAKE_MODULE_DIR}/FindCudaArch.cmake)
+    
     select_nvcc_arch_flags(NVCC_FLAGS_EXTRA)
-
-    list(APPEND CUDA_NVCC_FLAGS ${NVCC_FLAGS_EXTRA})
-
+    
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; ${NVCC_FLAGS_EXTRA})
+    
     #hack for gcc 5.x.x
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.9)
-        list(APPEND CUDA_NVCC_FLAGS " -D_MWAITXINTRIN_H_INCLUDED ")
+    list(APPEND CUDA_NVCC_FLAGS " -D_MWAITXINTRIN_H_INCLUDED ")
     endif()
-
-    set(HYDRA_CUDA_OPTIONS -x cu -Xcompiler ${OpenMP_CXX_FLAGS} -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA  -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_OMP -lgomp)
+    
+    set(HYDRA_CUDA_OPTIONS -Xcompiler ${OpenMP_CXX_FLAGS} -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA  -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_OMP -lgomp -I${HYDRA_THRUST_DIR})
 endif()
 
 macro(HydraAddCuda NAMEEXE SOURCES)
+    # Only supports one source
+    file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${SOURCES}.cu"
+                  INPUT "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCES}")
     cuda_add_executable(${NAMEEXE}
-        ${SOURCES}
+        "${CMAKE_CURRENT_BINARY_DIR}/${SOURCES}.cu"
         OPTIONS ${HYDRA_CUDA_OPTIONS} )
-    target_link_libraries(${NAMEEXE} PUBLIC ${CUDA_LIBRARIES})
+
+    get_property(the_include_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+    string(REPLACE ${CUDA_INCLUDE_DIRS} "" new_include_dirs ${the_include_dirs})
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES ${new_include_dirs})
+  
+    target_link_libraries(${NAMEEXE} ${CUDA_LIBRARIES})
 endmacro()
 
 macro(HydraAddOMP NAMEEXE SOURCES)
@@ -150,7 +154,7 @@ macro(HydraAddExecutable NAMEEXE SOURCES)
     if(CUDA_FOUND)
         message(STATUS "Making CUDA target: ${NAMEEXE}_cuda")
         HydraAddCuda(${NAMEEXE}_cuda ${SOURCES})
-        target_link_libraries(${NAMEEXE}_cuda PUBLIC ${NAMEEXE})
+        target_link_libraries(${NAMEEXE}_cuda ${NAMEEXE})
     endif()
     if(OPENMP_FOUND)
         message(STATUS "Making OpenMP target: ${NAMEEXE}_omp")
@@ -162,6 +166,7 @@ macro(HydraAddExecutable NAMEEXE SOURCES)
         HydraAddTBB(${NAMEEXE}_tbb ${SOURCES})
         target_link_libraries(${NAMEEXE}_tbb PUBLIC ${NAMEEXE})
     endif()
+    message(STATUS "Making CPP target: ${NAMEEXE}_cpp")
     HydraAddCPP(${NAMEEXE}_cpp ${SOURCES})
     target_link_libraries(${NAMEEXE}_cpp PUBLIC ${NAMEEXE})
 endmacro(HydraAddExecutable)
