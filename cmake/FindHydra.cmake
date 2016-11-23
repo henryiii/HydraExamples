@@ -60,6 +60,9 @@ find_package_handle_standard_args (HYDRA "HYDRA (http://github.com/multithreadco
 ######### Preparing basic info ##########
 
 set (CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(HYDRA_GENERAL_FLAGS "-DTHRUST_VARIADIC_TUPLE") # -Wl,--no-undefined,--no-allow-shlib-undefined")
@@ -130,10 +133,11 @@ endmacro()
 
 macro(HydraAddOMP NAMEEXE SOURCES)
     add_executable(${NAMEEXE} ${SOURCES})
-    set_target_properties(${NAMEEXE} PROPERTIES 
-        COMPILE_FLAGS "-DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_OMP -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_OMP ${OpenMP_CXX_FLAGS} ${HYDRA_CXX_FLAGS}")
-    set_target_properties(${NAMEEXE} PROPERTIES 
-        LINK_FLAGS "${OpenMP_CXX_FLAGS}")
+    target_compile_options(${NAMEEXE} PUBLIC 
+        -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_OMP
+        -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_OMP
+        ${OpenMP_CXX_FLAGS} ${HYDRA_CXX_FLAGS})
+    target_link_libraries(${NAMEEXE} PUBLIC ${OpenMP_CXX_FLAGS})
 endmacro()
 
 macro(HydraAddTBB NAMEEXE SOURCES)
