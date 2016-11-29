@@ -28,9 +28,9 @@ PYBIND11_PLUGIN(hydra_example) {
         .def_property("name", &Variable::GetName, &Variable::SetName)
         ;
 
-    py::class_<Novosibirsk>(m, "Novosibirsk")
+    py::class_<pdfs::Novosibirsk>(m, "Novosibirsk")
         .def(py::init<Parameter const&, Parameter const&, Parameter const&, GUInt_t>(), "mean"_a, "sigma"_a, "tail"_a, "position"_a)
-        .def("__repr__", [](const Novosibirsk& n){return std::string("<Novosibirsk>");})
+        .def("__repr__", [](const pdfs::Novosibirsk& n){return std::string("<Novosibirsk>");})
         ;
 
     return m.ptr();

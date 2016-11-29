@@ -22,6 +22,7 @@
 #include <hydra/UserParameters.h>
 #include <hydra/Pdf.h>
 #include <hydra/AddPdf.h>
+#include <hydra/FunctionWrapper.h>
 
 #include <thrust/transform.h>
 
@@ -90,11 +91,26 @@ GInt_t main(int argv, char** argc) {
 	Parameter  tail_p  = Parameter::Create().Name(Tail).Value(1.1).Error(0.001).Limits(0., 3.);
     upar.AddParameter(&tail_p);
 
+    //std::string Linear = "Linear";
+    //Parameter linear_p = Parameter(Linear, 2.5, .001, 0., 5.);
+    //upar.AddParameter(&linear_p);
+
+    std::string Yeild_a = "Yeild_a";
+    Parameter NA_a(Yeild_a ,nentries, sqrt(nentries), nentries - nentries/2, nentries + nentries/2) ;
+    upar.AddParameter(&NA_a);
+
+    std::string Yeild_b = "Yeild_b";
+    Parameter NA_b(Yeild_b ,nentries, sqrt(nentries), nentries - nentries/2, nentries + nentries/2) ;
+    upar.AddParameter(&NA_b);
+
     //check all is fine
     upar.PrintParameters();
 
 	// create functor
     pdfs::Novosibirsk Novosibirsk{mean_p, sigma_p, tail_p, 0};
+
+    //pdfs::Polynomial Polynomal{linear_p, 0};
+    auto Polynomial = hydra::wrap_lambda([] __host__ __device__ (GReal_t* x){return x[0];});
 
     //Vegas state hold the resources for performing the integration
     VegasState<1> state = VegasState<1>( min, max); // nota bene: the same range of the analisys
@@ -108,20 +124,24 @@ GInt_t main(int argv, char** argc) {
 	Vegas<1> vegas(state, 10000);
 
     //Make PDF
-	auto model  = make_pdf(Novosibirsk, &vegas);
-	model.PrintRegisteredParameters();
+	auto Novosibirsk_PDF   = make_pdf(Novosibirsk, &vegas);
+	Novosibirsk_PDF.PrintRegisteredParameters();
     
+	auto Polynomial_PDF   = make_pdf(Polynomial, &vegas);
+	Polynomial_PDF.PrintRegisteredParameters();
 
 	//----------------------------------------------------------------------
 	//integrate with the current parameters just to test
-	vegas.Integrate(model);
+	vegas.Integrate(Novosibirsk_PDF);
 	cout << ">>> Novosibirsk intetgral prior fit "<< endl;
 	cout << "Result: " << vegas.GetResult() << " +/- "
 		 << vegas.GetAbsError() << " Chi2: "<< vegas.GetState().GetChiSquare() << endl;
 
-	model.PrintRegisteredParameters();
+	Novosibirsk_PDF.PrintRegisteredParameters();
 
-    
+    std::array<Parameter*, 2> yields{&NA_a, &NA_b};
+    auto model = add_pdfs(yields, Novosibirsk_PDF, Polynomial_PDF);
+
 
 	//--------------------------------------------------------------------
 	//Generate data on the device with the original parameters
