@@ -12,6 +12,7 @@
 #include <hydra/Parameter.h>
 #include <initializer_list>
 #include <PDFs/BasePDF.h>
+#include <thrust/functional.h>
 
 namespace hydra {
 
@@ -63,7 +64,8 @@ struct Polynomial : public BasePDF<
         for(size_t i = 1; i<=N; i++)
             value += pow(xval, i) * this->fParams[i];
         
-        return value;
+        thrust::maximum<GReal_t> mx;
+        return mx(value,0);
 	}
 };
 }

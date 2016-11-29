@@ -72,7 +72,7 @@ GInt_t main(int argv, char** argc) {
 
 	//range of the analysis
 	std::array<GReal_t, 1>  min   ={ -10};
-	std::array<GReal_t, 1>  max   ={ 1};
+	std::array<GReal_t, 1>  max   ={ 10};
 
     // Must be declared here
 
@@ -92,7 +92,7 @@ GInt_t main(int argv, char** argc) {
     upar.AddParameter(&tail_p);
 
     std::string Linear = "Linear";
-    Parameter linear_p = Parameter(Linear, 2.5, .001, 0., 5.);
+    Parameter linear_p = Parameter(Linear, 1, .001, 0., 2.);
     upar.AddParameter(&linear_p);
 
     std::string Yeild_a = "Yeild_a";
@@ -137,7 +137,13 @@ GInt_t main(int argv, char** argc) {
 	cout << "Result: " << vegas.GetResult() << " +/- "
 		 << vegas.GetAbsError() << " Chi2: "<< vegas.GetState().GetChiSquare() << endl;
 
-	Novosibirsk_PDF.PrintRegisteredParameters();
+
+    vegas.Integrate(Polynomial_PDF);
+	cout << ">>> Polynomial intetgral prior fit "<< endl;
+	cout << "Result: " << vegas.GetResult() << " +/- "
+		 << vegas.GetAbsError() << " Chi2: "<< vegas.GetState().GetChiSquare() << endl;
+
+
 
     std::array<Parameter*, 2> yields{&NA_a, &NA_b};
     auto model = add_pdfs(yields, Novosibirsk_PDF, Polynomial_PDF);
@@ -177,16 +183,16 @@ GInt_t main(int argv, char** argc) {
 
 	// create Minimize minimizer
 	MnMinimize minimize(modelFCN,upar.GetState(), strategy);
-	FunctionMinimum *minimum=0;
+    std::unique_ptr<FunctionMinimum> minimum;
 
 	// ... Minimize and profile the time
 	auto start = std::chrono::high_resolution_clock::now();
 
 	if(use_comb_minimizer){
-		 minimum = new FunctionMinimum(minimize(iterations, tolerance));
+		 minimum.reset(new FunctionMinimum(minimize(iterations, tolerance)));
 	}
 	else{
-		 minimum = new FunctionMinimum(migrad(iterations, tolerance));
+		 minimum.reset(new FunctionMinimum(migrad(iterations, tolerance)));
 	}
 
 	auto end = std::chrono::high_resolution_clock::now();
@@ -258,8 +264,6 @@ GInt_t main(int argv, char** argc) {
 	canvas_gauss.SaveAs("./fit.png");
 
 	myapp->Run();
-
-	delete minimum;
 
 	return 0;
 
