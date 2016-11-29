@@ -5,7 +5,7 @@
  *      Author: augalves
  */
 
-#pragma ONCE
+#pragma once
 
 #include <hydra/Function.h>
 #include <hydra/Types.h>

@@ -4,7 +4,7 @@
  *  Created on: 05/09/2016
  *      Author: augalves
  */
-#pragma ONCE
+#pragma once
 
 #include <hydra/Function.h>
 #include <hydra/Types.h>

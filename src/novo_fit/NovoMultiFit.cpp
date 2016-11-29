@@ -41,8 +41,8 @@
 #include <TString.h>
 #include <TStyle.h>
 
-#include "PDFs/Gauss.h"
 #include "PDFs/Novosibirsk.h"
+#include "PDFs/Polynomial.h"
 
 using namespace std;
 using namespace ROOT::Minuit2;
@@ -91,9 +91,9 @@ GInt_t main(int argv, char** argc) {
 	Parameter  tail_p  = Parameter::Create().Name(Tail).Value(1.1).Error(0.001).Limits(0., 3.);
     upar.AddParameter(&tail_p);
 
-    //std::string Linear = "Linear";
-    //Parameter linear_p = Parameter(Linear, 2.5, .001, 0., 5.);
-    //upar.AddParameter(&linear_p);
+    std::string Linear = "Linear";
+    Parameter linear_p = Parameter(Linear, 2.5, .001, 0., 5.);
+    upar.AddParameter(&linear_p);
 
     std::string Yeild_a = "Yeild_a";
     Parameter NA_a(Yeild_a ,nentries, sqrt(nentries), nentries - nentries/2, nentries + nentries/2) ;
@@ -109,8 +109,8 @@ GInt_t main(int argv, char** argc) {
 	// create functor
     pdfs::Novosibirsk Novosibirsk{mean_p, sigma_p, tail_p, 0};
 
-    //pdfs::Polynomial Polynomal{linear_p, 0};
-    auto Polynomial = hydra::wrap_lambda([] __host__ __device__ (GReal_t* x){return x[0];});
+    pdfs::Polynomial<1> Polynomial({linear_p}, 0);
+    //auto Polynomial = hydra::wrap_lambda([] __host__ __device__ (GReal_t* x){return x[0];});
 
     //Vegas state hold the resources for performing the integration
     VegasState<1> state = VegasState<1>( min, max); // nota bene: the same range of the analisys
@@ -141,6 +141,7 @@ GInt_t main(int argv, char** argc) {
 
     std::array<Parameter*, 2> yields{&NA_a, &NA_b};
     auto model = add_pdfs(yields, Novosibirsk_PDF, Polynomial_PDF);
+    model.PrintRegisteredParameters();
 
 
 	//--------------------------------------------------------------------
