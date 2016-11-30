@@ -42,7 +42,7 @@
 #include <TStyle.h>
 
 #include "PDFs/Novosibirsk.h"
-#include "PDFs/Polynomial.h"
+#include "PDFs/Gauss.h"
 
 using namespace std;
 using namespace ROOT::Minuit2;
@@ -61,6 +61,8 @@ GInt_t main(int argv, char** argc) {
 	size_t  iterations         = 50000;
 	GReal_t tolerance          = 1.0;
 	GBool_t use_comb_minimizer = false;
+
+    TH1::SetDefaultSumw2();
 
 	//Print::SetLevel(0);
 	ROOT::Minuit2::MnPrint::SetLevel(3);
@@ -91,17 +93,13 @@ GInt_t main(int argv, char** argc) {
 	Parameter  tail_p  = Parameter::Create().Name(Tail).Value(1.1).Error(0.001).Limits(0., 3.);
     upar.AddParameter(&tail_p);
 
-    std::string Linear = "Linear";
-    Parameter linear_p = Parameter(Linear, 1, .001, 0., 2.);
-    upar.AddParameter(&linear_p);
+    std::string Mean2 = "Mean2";
+    Parameter mean2_p = Parameter(Mean2, 4, .001, 0., 10.);
+    upar.AddParameter(&mean2_p);
 
-    std::string Yeild_a = "Yeild_a";
-    Parameter NA_a(Yeild_a ,nentries, sqrt(nentries), nentries - nentries/2, nentries + nentries/2) ;
-    upar.AddParameter(&NA_a);
-
-    std::string Yeild_b = "Yeild_b";
-    Parameter NA_b(Yeild_b ,nentries, sqrt(nentries), nentries - nentries/2, nentries + nentries/2) ;
-    upar.AddParameter(&NA_b);
+    std::string Sigma2 = "Sigma2";
+    Parameter sigma2_p = Parameter(Sigma2, .7, .001, 0., 3.);
+    upar.AddParameter(&sigma2_p);
 
     //check all is fine
     upar.PrintParameters();
@@ -109,8 +107,7 @@ GInt_t main(int argv, char** argc) {
 	// create functor
     pdfs::Novosibirsk Novosibirsk{mean_p, sigma_p, tail_p, 0};
 
-    pdfs::Polynomial<1> Polynomial({linear_p}, 0);
-    //auto Polynomial = hydra::wrap_lambda([] __host__ __device__ (GReal_t* x){return x[0];});
+    pdfs::Gauss Gauss(mean2_p, sigma2_p, 0);
 
     //Vegas state hold the resources for performing the integration
     VegasState<1> state = VegasState<1>( min, max); // nota bene: the same range of the analisys
@@ -127,8 +124,8 @@ GInt_t main(int argv, char** argc) {
 	auto Novosibirsk_PDF   = make_pdf(Novosibirsk, &vegas);
 	Novosibirsk_PDF.PrintRegisteredParameters();
     
-	auto Polynomial_PDF   = make_pdf(Polynomial, &vegas);
-	Polynomial_PDF.PrintRegisteredParameters();
+	auto Gauss_PDF   = make_pdf(Gauss, &vegas);
+	Gauss_PDF.PrintRegisteredParameters();
 
 	//----------------------------------------------------------------------
 	//integrate with the current parameters just to test
@@ -136,17 +133,31 @@ GInt_t main(int argv, char** argc) {
 	cout << ">>> Novosibirsk intetgral prior fit "<< endl;
 	cout << "Result: " << vegas.GetResult() << " +/- "
 		 << vegas.GetAbsError() << " Chi2: "<< vegas.GetState().GetChiSquare() << endl;
+    GDouble_t novo_int = vegas.GetResult();
 
 
-    vegas.Integrate(Polynomial_PDF);
-	cout << ">>> Polynomial intetgral prior fit "<< endl;
+    vegas.Integrate(Gauss_PDF);
+	cout << ">>> Gauss intetgral prior fit "<< endl;
 	cout << "Result: " << vegas.GetResult() << " +/- "
 		 << vegas.GetAbsError() << " Chi2: "<< vegas.GetState().GetChiSquare() << endl;
+    GDouble_t guass_int = vegas.GetResult();
 
 
+    std::string Yeild_a = "Yeild_a";
+    //Parameter NA_a(Yeild_a ,nentries*novo_int, sqrt(nentries*novo_int), nentries*novo_int/2, 3*nentries*novo_int/2) ;
+    Parameter NA_a(Yeild_a ,nentries, sqrt(nentries), 0, 3*nentries/2) ;
+    //Parameter NA_a(Yeild_a ,nentries, sqrt(nentries)) ;
+    upar.AddParameter(&NA_a);
+
+    std::string Yeild_b = "Yeild_b";
+    //Parameter NA_b(Yeild_b ,nentries*poly_int, sqrt(nentries*poly_int), nentries*poly_int/2, 3*nentries*poly_int/2) ;
+    Parameter NA_b(Yeild_b ,nentries, sqrt(nentries), 0, 3*nentries/2) ;
+    //Parameter NA_b(Yeild_b ,nentries, sqrt(nentries)) ;
+    upar.AddParameter(&NA_b);
+    
 
     std::array<Parameter*, 2> yields{&NA_a, &NA_b};
-    auto model = add_pdfs(yields, Novosibirsk_PDF, Polynomial_PDF);
+    auto model = add_pdfs(yields, Novosibirsk_PDF, Gauss_PDF);
     model.PrintRegisteredParameters();
 
 
@@ -161,7 +172,7 @@ GInt_t main(int argv, char** argc) {
 	//get data from device and fill histogram
 	PointVector<host> data_h(data_d);
 
-	TH1D hist_novo("novo", "", 100, min[0], max[0]);
+	TH1D hist_novo("novo_original", "", 100, min[0], max[0]);
 
 	for(auto point: data_h )
 		hist_novo.Fill(point.GetCoordinate(0));
@@ -242,11 +253,12 @@ GInt_t main(int argv, char** argc) {
 	TApplication *myapp=new TApplication("myapp",0,0);
 
 
-	TCanvas canvas_gauss("canvas_gauss", "novo distribution", 500, 500);
+	TCanvas canvas_1("canvas_1", "novo distribution", 500, 500);
 	hist_novo.Draw("e0");
 	hist_novo.SetMarkerSize(1);
 	hist_novo.SetMarkerStyle(20);
 
+    //TCanvas canvas_2("canvas_2", "novo distribution", 500, 500);
 	//sampled data after fit
 	hist_novo_fit.Draw("barSAME");
 	hist_novo_fit.SetLineColor(4);
@@ -260,9 +272,7 @@ GInt_t main(int argv, char** argc) {
 	hist_novo_plot.Draw("csame");
 	hist_novo_plot.SetLineColor(2);
 	hist_novo_plot.SetLineWidth(2);
-
-	canvas_gauss.SaveAs("./fit.png");
-
+ 
 	myapp->Run();
 
 	return 0;

@@ -74,6 +74,7 @@ GInt_t main(int argv, char** argc) {
 	GReal_t tolerance          = 1.0;
 	GBool_t use_comb_minimizer = false;
 
+    TH1::SetDefaultSumw2();
 
 	//Print::SetLevel(0);
 	ROOT::Minuit2::MnPrint::SetLevel(3);
