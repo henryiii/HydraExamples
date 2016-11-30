@@ -22,5 +22,8 @@ find_package(ROOT)
 include_directories(include)
 
 add_subdirectory(src)
-add_subdirectory(python)
+option(PYTHON_BIND OFF)
+if(PYTHON_BIND)
+    add_subdirectory(python)
+endif()
 
