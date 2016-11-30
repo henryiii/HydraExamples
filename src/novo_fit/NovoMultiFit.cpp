@@ -41,7 +41,7 @@
 #include <TString.h>
 #include <TStyle.h>
 
-#include "PDFs/Novosibirsk.h"
+#include "PDFs/NovosibirskClassic.h"
 #include "PDFs/Gauss.h"
 
 using namespace std;
@@ -164,8 +164,8 @@ GInt_t main(int argv, char** argc) {
 	//--------------------------------------------------------------------
 	//Generate data on the device with the original parameters
 	//
-    PointVector<device, GReal_t, 1> data_d(nentries);
-    Generator.Sample<device>(model, min, max, data_d, nentries);
+    PointVector<device, GReal_t, 1> data_d(nentries*2);
+    Generator.Sample<device>(model, min, max, data_d, nentries*2);
 
 
 	//---------------------------
@@ -226,7 +226,7 @@ GInt_t main(int argv, char** argc) {
 	//sample fit function on the host nentries trials
 	PointVector<host, GReal_t, 1> data2_h(0);
 	Generator.SetSeed(std::chrono::system_clock::now().time_since_epoch().count()+1);//+1 because all can run very fast sometimes
-	Generator.Sample(model, min, max, data2_h, nentries );
+	Generator.Sample(model, min, max, data2_h, nentries*2);
 
 	TH1D hist_novo_fit("novo_fit", "", 100, min[0], max[0]);
 
