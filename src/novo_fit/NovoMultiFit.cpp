@@ -55,7 +55,7 @@ struct {
     }
 } First;
 
-GInt_t main(int argv, char** argc) {
+GInt_t main(int argc, char** argv) {
 
 	size_t  nentries           = 1e6;
 	size_t  iterations         = 50000;
@@ -245,13 +245,11 @@ GInt_t main(int argv, char** argc) {
 	hist_novo_plot.Scale(hist_novo.Integral()/hist_novo_plot.Integral() );
 
 
-
 	/***********************************
 	 * RootApp, Drawing...
 	 ***********************************/
 
-	TApplication *myapp=new TApplication("myapp",0,0);
-
+	TApplication myapp("NovoMultiFit", &argc, argv);
 
 	TCanvas canvas_1("canvas_1", "novo distribution", 500, 500);
 	hist_novo.Draw("e0");
@@ -272,12 +270,15 @@ GInt_t main(int argv, char** argc) {
 	hist_novo_plot.Draw("csame");
 	hist_novo_plot.SetLineColor(2);
 	hist_novo_plot.SetLineWidth(2);
+    
+    canvas_1.SaveAs("MultiFit.png");
  
-	myapp->Run();
+    if(!gROOT->IsBatch()) {
+        TQObject::Connect(&canvas_1, "Closed()", "TApplication", &myapp, "Terminate(=0)");
+	    myapp.Run();
+    }
 
 	return 0;
-
-
 }
 
 
