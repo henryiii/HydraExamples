@@ -44,6 +44,8 @@
 #include <hydra/Pdf.h>
 #include <hydra/AddPdf.h>
 
+#include "hydra/CurrentDevice.h"
+
 #include "Minuit2/MnMigrad.h"
 #include "Minuit2/MnMinimize.h"
 
@@ -67,14 +69,18 @@ using namespace ROOT::Minuit2;
 using namespace hydra;
 using namespace hydra::pdfs;
 
-GInt_t main(int argv, char** argc) {
+const TString cdev{CURRENT_DEVICE};
+
+GInt_t main(int argc, char** argv) {
+
+	TApplication myapp("myapp", &argc, argv);
 
 	size_t  nentries           = 1e6;
 	size_t  iterations         = 50000;
 	GReal_t tolerance          = 1.0;
 	GBool_t use_comb_minimizer = false;
 
-    TH1::SetDefaultSumw2();
+        TH1::SetDefaultSumw2();
 
 	//Print::SetLevel(0);
 	ROOT::Minuit2::MnPrint::SetLevel(3);
@@ -231,16 +237,16 @@ GInt_t main(int argv, char** argc) {
 
 	// create Minimize minimizer
 	MnMinimize minimize(modelFCN,upar.GetState() ,  strategy);
-	FunctionMinimum *minimum=0;
+	std::unique_ptr<FunctionMinimum> minimum;
 
 	// ... Minimize and profile the time
 	auto start = std::chrono::high_resolution_clock::now();
 
 	if(use_comb_minimizer){
-		 minimum = new FunctionMinimum(minimize(iterations, tolerance));
+		 minimum.reset( new FunctionMinimum(minimize(iterations, tolerance)));
 	}
 	else{
-		 minimum = new FunctionMinimum(migrad(iterations, tolerance));
+		 minimum.reset(new FunctionMinimum(migrad(iterations, tolerance)));
 	}
 
 	auto end = std::chrono::high_resolution_clock::now();
@@ -251,7 +257,7 @@ GInt_t main(int argv, char** argc) {
 
 	//time
 	std::cout << "-----------------------------------------"<<std::endl;
-	std::cout << "| Time (ms) ="<< elapsed.count() <<std::endl;
+	std::cout << "| Time (ms) " << cdev << " ="<< elapsed.count() <<std::endl;
 	std::cout << "-----------------------------------------"<<std::endl;
 
 	//------------------------------------------------------
@@ -282,12 +288,10 @@ GInt_t main(int argv, char** argc) {
 	hist_gaussian_plot.Scale(hist_gaussian.Integral()/hist_gaussian_plot.Integral() );
 
 
-
 	/***********************************
 	 * RootApp, Drawing...
 	 ***********************************/
 
-	TApplication *myapp=new TApplication("myapp",0,0);
 
 
 	TCanvas canvas_gauss("canvas_gauss", "Gaussian distribution", 500, 500);
@@ -309,11 +313,14 @@ GInt_t main(int argv, char** argc) {
 	hist_gaussian_plot.SetLineColor(2);
 	hist_gaussian_plot.SetLineWidth(2);
 
-	canvas_gauss.SaveAs("./plots/Fit_CUDA.png");
 
-	myapp->Run();
+        if(!gROOT->IsBatch()) {
+            TQObject::Connect(&canvas_gauss, "Closed()", "TApplication", &myapp, "Terminate(=0)");
+	    myapp.Run();
+        } else {
+	    canvas_gauss.SaveAs("./plots/Fit_"+cdev+".png");
 
-	delete minimum;
+        }
 
 	return 0;
 

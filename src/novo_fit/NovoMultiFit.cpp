@@ -218,7 +218,7 @@ GInt_t main(int argc, char** argv) {
 
 	//time
 	std::cout << "-----------------------------------------"<<std::endl;
-	std::cout << "| Time (ms) ="<< elapsed.count() <<std::endl;
+	std::cout << "| Time (ms) "<< hydra::CURRENT_DEVICE <<" ="<< elapsed.count() <<std::endl;
 	std::cout << "-----------------------------------------"<<std::endl;
 
 	//------------------------------------------------------
