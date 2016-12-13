@@ -73,7 +73,7 @@ GInt_t main(int argc, char** argv) {
 	//----------------------------------------------
 
 	//Generator with current time count as seed.
-	size_t seed = 0; //std::chrono::system_clock::now().time_since_epoch().count();
+	size_t seed = 1; //std::chrono::system_clock::now().time_since_epoch().count();
 	Random<thrust::random::default_random_engine> Generator( seed  );
 
 	//range of the analysis
@@ -86,23 +86,23 @@ GInt_t main(int argc, char** argv) {
 	UserParameters upar;
 
     std::string Mean = "Mean";
-	Parameter  mean_p  = Parameter::Create().Name(Mean).Value(.4) .Error(0.001).Limits(-10., 10.);
+	Parameter  mean_p  = Parameter::Create().Name(Mean).Value(.4) .Error(0.01).Limits(-10., 10.);
     upar.AddParameter(&mean_p);
 
     std::string Sigma = "Sigma";
-	Parameter  sigma_p = Parameter::Create().Name(Sigma).Value(.6).Error(0.001).Limits(0., 1.);
+	Parameter  sigma_p = Parameter::Create().Name(Sigma).Value(.6).Error(0.01).Limits(0., 1.);
     upar.AddParameter(&sigma_p);
 
     std::string Tail = "Tail";
-	Parameter  tail_p  = Parameter::Create().Name(Tail).Value(1.1).Error(0.001).Limits(0., 3.);
+	Parameter  tail_p  = Parameter::Create().Name(Tail).Value(1.1).Error(0.01).Limits(0., 3.);
     upar.AddParameter(&tail_p);
 
     std::string Mean2 = "Mean2";
-    Parameter mean2_p = Parameter(Mean2, 4, .001, 0., 10.);
+    Parameter mean2_p = Parameter(Mean2, 4, .01, 0., 10.);
     upar.AddParameter(&mean2_p);
 
     std::string Sigma2 = "Sigma2";
-    Parameter sigma2_p = Parameter(Sigma2, .7, .001, 0., 3.);
+    Parameter sigma2_p = Parameter(Sigma2, .7, .01, 0., 3.);
     upar.AddParameter(&sigma2_p);
 
     //check all is fine
@@ -119,7 +119,7 @@ GInt_t main(int argc, char** argv) {
 	state.SetAlpha(1.75);
 	state.SetIterations(5);
 	state.SetUseRelativeError(1);
-	state.SetMaxError(1e-3);
+	state.SetMaxError(1e-2);
 
     //5,000 calls (fast convergence and precise result)
 	Vegas<1> vegas(state, 10000);
@@ -229,7 +229,7 @@ GInt_t main(int argc, char** argv) {
 
 	//sample fit function on the host nentries trials
 	PointVector<host, GReal_t, 1> data2_h(0);
-	Generator.SetSeed(std::chrono::system_clock::now().time_since_epoch().count()+1);//+1 because all can run very fast sometimes
+	//Generator.SetSeed(std::chrono::system_clock::now().time_since_epoch().count()+1);//+1 because all can run very fast sometimes
 	Generator.Sample(model, min, max, data2_h, nentries*2);
 
 	TH1D hist_novo_fit("novo_fit", "", 100, min[0], max[0]);
