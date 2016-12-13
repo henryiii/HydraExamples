@@ -24,7 +24,8 @@ find_path (HYDRA_ROOT_PATH hydra/Hydra.h cmake/FindCudaArch.cmake
   PATHS
   ${HYDRA_ROOT}
   ${HYDRA_INCLUDE_DIR}
-  )
+)
+
 
 # find the headers
 find_path (HYDRA_INCLUDE_DIR hydra/Hydra.h
@@ -85,6 +86,9 @@ if (${_index} EQUAL -1)
     set(CMAKE_MODULE_PATH ${HYDRA_CMAKE_MODULE_DIR} ${CMAKE_MODULE_PATH})
 endif()
 endif()
+
+find_package(Boost REQUIRED) 
+include_directories(${Boost_INCLUDE_DIRS})
 
 find_package(CUDA 8.0)
 find_package(TBB)
