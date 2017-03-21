@@ -60,7 +60,7 @@ find_package_handle_standard_args (HYDRA "HYDRA (http://github.com/multithreadco
 
 ######### Preparing basic info ##########
 
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 

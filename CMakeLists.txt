@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.3)
 
 # project name
-project(HydraExamples CXX)
+project(HydraExamples CXX C)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
